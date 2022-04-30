@@ -18,5 +18,3 @@ class Client:
     def send_request(self, body:bytes):
         self.client.connect((self.HOST, self.PORT))
         self.client.sendall(body)
-        time.sleep(1)
-        return self.client.recv(1024)
