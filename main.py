@@ -1,5 +1,6 @@
-from client import Client
+from gui import *
 
-client = Client('192.168.1.68', 65432)
 
-client.request_footage()
+
+gui = GUI('#424242', (800, 500))
+gui.gui()
