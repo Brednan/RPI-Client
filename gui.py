@@ -1,19 +1,20 @@
 import tkinter as tk
 from client import Client
+from threading import Thread
 
 
 class GUI:
     def __init__(self, bg, size) -> None:
         self.bg = bg
         self.size = size
-        self.client = Client('192.168.1.68', 65432)
+        self.client = Client('192.168.1.80', 65432)
 
     def gui(self):
         self.main = MainWindow(self.size, self.bg)
         self.main.window.protocol('WM_DELETE_WINDOW', lambda: self.on_close())
         
         self.forward_button = ForwardButton(self.main.window, (400, 50))
-        self.forward_button.button.config(command=lambda: self.client.send_request(b'Forward'))
+        self.forward_button.button.config(command=lambda: Thread(target=self.client.send_request, args=(b'Forward',)).start())
 
         self.stop_button = StopButton(self.main.window, (400, 120))
         self.stop_button.button.config(command=lambda: self.client.send_request(b'Stop'))
@@ -27,8 +28,12 @@ class GUI:
         self.main.window.mainloop()
     
     def on_close(self):
-        self.client.send_request(b'Stop')
-        self.main.window.destroy()
+        try:
+            self.client.send_request(b'Stop')
+        except:
+            self.main.window.destroy()
+        else:
+            self.main.window.destroy()
 
 
 class MainWindow:
