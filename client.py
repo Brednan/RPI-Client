@@ -26,13 +26,13 @@ class Client:
     #This function requests for the pictures that are taken by the Pi-Cam
     def request_footage(self):
         client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client.settimeout(1.8)
+        client.settimeout(0.9)
         client.connect((self.HOST, self.PORT))
         client.sendall(b'Footage')
 
         footage_chunk = client.recv(2048)
         
-        output_file = open('./Vision/vision.png', 'wb')
+        output_file = open('./Vision/vision.jpg', 'wb')
         
         while footage_chunk:
             output_file.write(footage_chunk)
@@ -40,3 +40,5 @@ class Client:
                 footage_chunk = client.recv(2048)
             except:
                 break
+        
+        client.close()

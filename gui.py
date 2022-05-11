@@ -1,29 +1,34 @@
 import tkinter as tk
 from client import Client
-from threading import Thread
+import threading
+from PIL import ImageTk, Image
+from Vision.vision import Vision
+import time
 
 
 class GUI:
     def __init__(self, bg, size) -> None:
         self.bg = bg
         self.size = size
-        self.client = Client('192.168.1.80', 65432)
+
 
     def gui(self):
         self.main = MainWindow(self.size, self.bg)
         self.main.window.protocol('WM_DELETE_WINDOW', lambda: self.on_close())
         
         self.forward_button = ForwardButton(self.main.window, (400, 50))
-        self.forward_button.button.config(command=lambda: Thread(target=self.client.send_request, args=(b'Forward',)).start())
+        self.forward_button.button.config(command=lambda: threading.Thread(target=self.client.send_request, args=(b'Forward',)).start())
 
         self.stop_button = StopButton(self.main.window, (400, 120))
-        self.stop_button.button.config(command=lambda: self.client.send_request(b'Stop'))
+        self.stop_button.button.config(command=lambda: threading.Thread(target=self.client.send_request, args=(b'Stop',)).start())
 
         self.right_button = RightButton(self.main.window, (550, 120))
-        self.right_button.button.config(command=lambda: self.client.send_request(b'Right'))
+        self.right_button.button.config(command=lambda: threading.Thread(target=self.client.send_request, args=(b'Right',)).start())
 
-        self.stop_button = LeftButton(self.main.window, (250, 120))
-        self.stop_button.button.config(command=lambda: self.client.send_request(b'Left'))
+        self.left_button = LeftButton(self.main.window, (250, 120))
+        self.left_button.button.config(command=lambda: threading.Thread(target=self.client.send_request, args=(b'Left',)).start())
+
+        self.footage_display = FootageDisplay(self.main.window, (400, 300))
 
         self.main.window.mainloop()
     
@@ -65,3 +70,39 @@ class LeftButton:
     def __init__(self, master, pos:tuple):
         self.button = tk.Button(master, text='Left', font=('default', 20), bg='#00ADBB', fg='white', width=8)
         self.button.place(x=pos[0], y=pos[1], anchor=tk.CENTER)
+
+
+class FootageDisplay(Vision):
+    def __init__(self, master, pos:tuple):
+        super().__init__()
+
+        self.quit = False
+        self.master = master
+        self.pos = pos
+
+        self.image = Image.open('./Vision/vision.jpg')
+        self.image = self.image.resize((350, 250), Image.ANTIALIAS)
+        self.image = ImageTk.PhotoImage(self.image)
+
+        self.label = tk.Label(master, image=self.image)
+        self.label.place(x=pos[0], y=pos[1], anchor=tk.CENTER)
+
+        threading.Thread(target=self.update_image).start()
+
+    def update_image(self):
+        while True:
+            try:
+                self.get_footage()
+
+                self.image = Image.open('./Vision/vision.jpg')
+                self.image = self.image.resize((350, 250), Image.ANTIALIAS)
+                self.image = ImageTk.PhotoImage(self.image)
+
+                self.label = tk.Label(self.master, image=self.image)
+                self.label.place(x=self.pos[0], y=self.pos[1], anchor=tk.CENTER)
+            
+            except:
+                break
+
+            if self.quit == True:
+                break
